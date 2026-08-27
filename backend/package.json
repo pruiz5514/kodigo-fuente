@@ -8,20 +8,25 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:seed": "node -r tsx/cjs ./node_modules/.bin/sequelize-cli db:seed",
+    "db:seed:undo": "node -r tsx/cjs ./node_modules/.bin/sequelize-cli db:seed:undo"
   },
   "author": "pruiz554",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "pg": "^8.23.0",
     "sequelize": "^6.37.8"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.4.0",
+    "sequelize-cli": "^6.6.5",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2"
   }
