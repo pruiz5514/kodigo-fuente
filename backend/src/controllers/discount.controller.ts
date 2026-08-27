@@ -41,4 +41,17 @@ export default class DiscountController {
         next(error);
     }
   }
+
+  async create(req: Request, res: Response, next: NextFunction){
+    try{
+      const body = req.body;
+      const newDiscount = await service.create(body);
+      return res.status(201).json({
+          ok: true,
+          discount: newDiscount,
+      });
+    }catch (error) {
+        next(error);
+    }
+  }
 }

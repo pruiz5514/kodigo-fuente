@@ -1,11 +1,23 @@
 
-import { DataTypes } from "sequelize";
+import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import { sequelize } from "../sequelize.js";
 import { Category } from "./category.model.js";
 import { Product } from "./product.model.js";
 import { DiscountType } from "./discount-type.model.js";
 
-export const Discount = sequelize.define('discount',{
+export class Discount extends Model<InferAttributes<Discount>, InferCreationAttributes<Discount>> {
+    declare id: CreationOptional<number>;
+    declare name: string;
+    declare category_id: CreationOptional<number | null>;
+    declare product_id: CreationOptional<number | null>;
+    declare discount_type_id: number;
+    declare discount_value: number;
+    declare start_date: string;
+    declare end_date: string;
+    declare status: CreationOptional<'Programado' | 'Activo' | 'Finalizado'>;
+}
+
+Discount.init({
     id:{
         primaryKey:true,
         type: DataTypes.INTEGER,
@@ -64,6 +76,8 @@ export const Discount = sequelize.define('discount',{
         defaultValue: 'Programado'
     }
 },{
+    sequelize,
+    modelName: 'discount',
     validate: {
         productXorCategory() {
             const hasCategory = this.category_id != null;

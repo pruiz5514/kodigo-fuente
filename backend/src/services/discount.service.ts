@@ -3,6 +3,14 @@ import { Discount } from "../database/models/discount.model.js";
 import { Category } from "../database/models/category.model.js";
 import { Product } from "../database/models/product.model.js";
 import { DiscountType } from "../database/models/discount-type.model.js";
+import { CreateDiscountBody } from "../types/discount.types.js";
+import { AppError } from "../middlewares/error.handler.js";
+
+function badRequest(message: string): AppError {
+    const error: AppError = new Error(message);
+    error.status = 400;
+    return error;
+}
 
 interface FindParams {
     currentLimit: number;
@@ -53,5 +61,51 @@ export default class DiscountService{
             limit: currentLimit,
             offset
         })
+    }
+
+    async create(data: CreateDiscountBody){
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+
+        const startDate = new Date(data.start_date);
+        if (startDate < today) {
+            throw badRequest('"start_date" no puede ser anterior a la fecha de hoy');
+        }
+
+        const endDate = new Date(data.end_date);
+        if (endDate < startDate) {
+            throw badRequest('"end_date" no puede ser anterior a "start_date"');
+        }
+
+        if (!data.category_id && !data.product_id) {
+            throw badRequest('Debe especificar un producto o una categoría');
+        }
+
+        if (data.category_id) {
+            const category = await Category.findByPk(data.category_id);
+            if (!category) throw badRequest('La categoría especificada no existe');
+        }
+
+        if (data.product_id) {
+            const product = await Product.findByPk(data.product_id);
+            if (!product) throw badRequest('El producto especificado no existe');
+        }
+
+        if (data.discount_type_id) {
+            const discountType = await DiscountType.findByPk(data.discount_type_id);
+            if (!discountType) throw badRequest('El Tipo de descuento especificado no existe');
+
+            if (discountType.get('name') === 'Porcentaje') {
+                if (data.discount_value < 1 || data.discount_value > 100) {
+                    throw badRequest('Si el tipo de descuento es "Porcentaje", el valor debe estar entre 1 y 100');
+                }
+
+                if (!Number.isInteger(data.discount_value)) {
+                    throw badRequest('Si el tipo de descuento es "Porcentaje", el valor debe ser un número entero');
+                }
+            }
+        }
+
+        return Discount.create(data)
     }
 }

@@ -1,9 +1,11 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../sequelize.js";
 import { Category } from "./category.model.js";
 import { Product } from "./product.model.js";
 import { DiscountType } from "./discount-type.model.js";
-export const Discount = sequelize.define('discount', {
+export class Discount extends Model {
+}
+Discount.init({
     id: {
         primaryKey: true,
         type: DataTypes.INTEGER,
@@ -55,6 +57,8 @@ export const Discount = sequelize.define('discount', {
         defaultValue: 'Programado'
     }
 }, {
+    sequelize,
+    modelName: 'discount',
     validate: {
         productXorCategory() {
             const hasCategory = this.category_id != null;
