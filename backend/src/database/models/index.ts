@@ -1,5 +1,16 @@
 import { Category } from "./category.model.js";
 import { Product } from "./product.model.js";
+import { DiscountType } from "./discount-type.model.js";
+import { Discount } from "./discount.model.js";
 
 Category.hasMany(Product, {foreignKey: "category_id"})
 Product.belongsTo(Category, {foreignKey: "category_id"})
+
+DiscountType.hasMany(Discount, {foreignKey:"discount_type_id"})
+Discount.belongsTo(DiscountType, {foreignKey: "discount_type_id"})
+
+Category.hasMany(Discount, {foreignKey: "category_id"})
+Discount.belongsTo(Category, {foreignKey: "category_id"})
+
+Product.hasMany(Discount, {foreignKey: "product_id"})
+Discount.belongsTo(Product, {foreignKey: "product_id"})
