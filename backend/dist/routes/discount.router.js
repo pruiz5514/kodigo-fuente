@@ -6,4 +6,5 @@ const router = express.Router();
 const controller = new DiscountController();
 router.get("/", controller.findAll);
 router.post("/", validatorHandler(discountSchema), controller.create);
+router.delete("/:id", controller.delete);
 export default router;

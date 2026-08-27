@@ -40,4 +40,14 @@ export default class DiscountController {
             next(error);
         }
     }
+    async delete(req, res, next) {
+        try {
+            const id = Number(req.params.id);
+            await service.delete(id);
+            return res.status(204).send();
+        }
+        catch (error) {
+            next(error);
+        }
+    }
 }

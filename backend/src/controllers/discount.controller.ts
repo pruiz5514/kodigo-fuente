@@ -54,4 +54,14 @@ export default class DiscountController {
         next(error);
     }
   }
+
+  async delete(req: Request, res: Response, next: NextFunction){
+    try{
+      const id = Number(req.params.id);
+      await service.delete(id);
+      return res.status(204).send();
+    }catch (error) {
+        next(error);
+    }
+  }
 }

@@ -108,4 +108,15 @@ export default class DiscountService{
 
         return Discount.create(data)
     }
+
+    async delete(id: number){
+        const discount = await Discount.findByPk(id);
+        if (!discount) throw badRequest('La promoción especificada no existe');
+
+        if (discount.get('status') !== 'Programado') {
+            throw badRequest('Solo se puede eliminar una promoción en estado "Programado"');
+        }
+
+        await discount.destroy();
+    }
 }
