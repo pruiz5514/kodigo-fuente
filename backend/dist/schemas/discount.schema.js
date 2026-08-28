@@ -1,4 +1,7 @@
 import Joi from "joi";
+function getBogotaToday() {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date());
+}
 export const discountSchema = Joi.object({
     name: Joi.string().required(),
     category_id: Joi.number().optional(),
@@ -7,9 +10,9 @@ export const discountSchema = Joi.object({
     discount_value: Joi.number().precision(2).required(),
     status: Joi.string().valid('Programado', 'Activo', 'Finalizado').optional(),
     start_date: Joi.date().custom((value, helpers) => {
-        const today = new Date();
-        today.setUTCHours(0, 0, 0, 0);
-        if (value < today) {
+        const today = getBogotaToday();
+        const valueDate = value.toISOString().slice(0, 10);
+        if (valueDate < today) {
             return helpers.message({ '*': '"start_date" no puede ser anterior a la fecha de hoy' });
         }
         return value;

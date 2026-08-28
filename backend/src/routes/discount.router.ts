@@ -10,6 +10,10 @@ router.get( "/",
     controller.findAll
 );
 
+router.get( "/summary",
+    controller.getSummary
+);
+
 router.post( "/",
     validatorHandler(discountSchema),
     controller.create

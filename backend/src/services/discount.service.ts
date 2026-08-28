@@ -12,6 +12,10 @@ function badRequest(message: string): AppError {
     return error;
 }
 
+function getBogotaToday(): string {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date());
+}
+
 interface FindParams {
     currentLimit: number;
     offset: number;
@@ -64,16 +68,13 @@ export default class DiscountService{
     }
 
     async create(data: CreateDiscountBody){
-        const today = new Date();
-        today.setUTCHours(0, 0, 0, 0);
+        const today = getBogotaToday();
 
-        const startDate = new Date(data.start_date);
-        if (startDate < today) {
+        if (data.start_date < today) {
             throw badRequest('"start_date" no puede ser anterior a la fecha de hoy');
         }
 
-        const endDate = new Date(data.end_date);
-        if (endDate < startDate) {
+        if (data.end_date < data.start_date) {
             throw badRequest('"end_date" no puede ser anterior a "start_date"');
         }
 
@@ -107,6 +108,35 @@ export default class DiscountService{
         }
 
         return Discount.create(data)
+    }
+
+    async findActiveToday(){
+        const today = getBogotaToday();
+
+        return Discount.findAll({
+            where: {
+                status: 'Activo',
+                start_date: { [Op.lte]: today },
+                end_date: { [Op.gte]: today },
+            },
+            include: [Category, Product, DiscountType],
+        })
+    }
+
+    async getSummary(){
+        const [programada, activa, finalizada, activeToday] = await Promise.all([
+            Discount.count({ where: { status: 'Programado' } }),
+            Discount.count({ where: { status: 'Activo' } }),
+            Discount.count({ where: { status: 'Finalizado' } }),
+            this.findActiveToday(),
+        ]);
+
+        return {
+            scheduled: programada,
+            active: activa,
+            finished: finalizada,
+            activeToday: activeToday.length,
+        };
     }
 
     async delete(id: number){

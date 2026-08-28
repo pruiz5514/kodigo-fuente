@@ -50,4 +50,13 @@ export default class DiscountController {
             next(error);
         }
     }
+    async getSummary(req, res, next) {
+        try {
+            const summary = await service.getSummary();
+            return res.status(200).json({ ok: true, summary });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
 }

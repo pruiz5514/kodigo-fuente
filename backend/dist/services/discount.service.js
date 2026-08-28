@@ -8,6 +8,9 @@ function badRequest(message) {
     error.status = 400;
     return error;
 }
+function getBogotaToday() {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date());
+}
 export default class DiscountService {
     async find({ currentLimit, offset, name, status, category_id, start_date_from, start_date_to, end_date_from, end_date_to, }) {
         const where = {};
@@ -37,14 +40,11 @@ export default class DiscountService {
         });
     }
     async create(data) {
-        const today = new Date();
-        today.setUTCHours(0, 0, 0, 0);
-        const startDate = new Date(data.start_date);
-        if (startDate < today) {
+        const today = getBogotaToday();
+        if (data.start_date < today) {
             throw badRequest('"start_date" no puede ser anterior a la fecha de hoy');
         }
-        const endDate = new Date(data.end_date);
-        if (endDate < startDate) {
+        if (data.end_date < data.start_date) {
             throw badRequest('"end_date" no puede ser anterior a "start_date"');
         }
         if (!data.category_id && !data.product_id) {
@@ -74,6 +74,31 @@ export default class DiscountService {
             }
         }
         return Discount.create(data);
+    }
+    async findActiveToday() {
+        const today = getBogotaToday();
+        return Discount.findAll({
+            where: {
+                status: 'Activo',
+                start_date: { [Op.lte]: today },
+                end_date: { [Op.gte]: today },
+            },
+            include: [Category, Product, DiscountType],
+        });
+    }
+    async getSummary() {
+        const [programada, activa, finalizada, activeToday] = await Promise.all([
+            Discount.count({ where: { status: 'Programado' } }),
+            Discount.count({ where: { status: 'Activo' } }),
+            Discount.count({ where: { status: 'Finalizado' } }),
+            this.findActiveToday(),
+        ]);
+        return {
+            scheduled: programada,
+            active: activa,
+            finished: finalizada,
+            activeToday: activeToday.length,
+        };
     }
     async delete(id) {
         const discount = await Discount.findByPk(id);
