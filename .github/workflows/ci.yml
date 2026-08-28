@@ -1,0 +1,163 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Lint backend
+        working-directory: backend
+        run: npm run lint
+
+      - name: Typecheck backend
+        working-directory: backend
+        run: npm run typecheck
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+
+  test:
+    name: Unit tests
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run backend tests
+        working-directory: backend
+        run: npm test
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test
+
+  build:
+    name: Build Docker images
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -t kodigo-fuente-backend:ci ./backend
+
+      - name: Build frontend image
+        # VITE_API_URL is baked into the static bundle at build time. This stage only
+        # proves the Dockerfile builds correctly, so a placeholder is fine here; the
+        # smoke-test stage below builds the real image using the actual secret value.
+        run: |
+          docker build \
+            --build-arg VITE_API_URL=http://localhost:8000/api \
+            -t kodigo-fuente-frontend:ci \
+            ./frontend
+
+  smoke-test:
+    name: Smoke test (docker compose up + /health)
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      PORT: ${{ secrets.PORT }}
+      FRONTEND_PORT: ${{ secrets.FRONTEND_PORT }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+      VITE_API_URL: ${{ secrets.VITE_API_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate required environment variables
+        run: |
+          required_vars=(PORT FRONTEND_PORT POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD POSTGRES_PORT VITE_API_URL)
+          missing=0
+          for var in "${required_vars[@]}"; do
+            if [ -z "${!var}" ]; then
+              echo "::error::Falta la variable de entorno/secreto requerido: $var"
+              missing=1
+            fi
+          done
+          if [ "$missing" -eq 1 ]; then
+            echo "::error::Faltan variables de entorno requeridas. Configura los GitHub Secrets del repositorio (ver .env.example)."
+            exit 1
+          fi
+
+      - name: Write .env for docker compose
+        run: |
+          cat > .env <<EOF
+          PORT=${PORT}
+          FRONTEND_PORT=${FRONTEND_PORT}
+          POSTGRES_HOST=postgres
+          POSTGRES_PORT=${POSTGRES_PORT}
+          POSTGRES_DB=${POSTGRES_DB}
+          POSTGRES_USER=${POSTGRES_USER}
+          POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+          DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+          VITE_API_URL=${VITE_API_URL}
+          EOF
+
+      - name: Start the stack
+        run: docker compose up -d --build --wait --wait-timeout 120
+
+      - name: Request /health and verify it responds 200
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PORT}/health")
+          echo "GET /health -> $status"
+          if [ "$status" != "200" ]; then
+            echo "::error::El endpoint /health no respondió 200 (respondió $status)"
+            exit 1
+          fi
+
+      - name: Show container logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

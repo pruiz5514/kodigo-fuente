@@ -12,10 +12,10 @@ const Input = ({
     placeholder,
     type = "text",
     name,
-    error,
+    error: _error,
     color,
     fontSize,
-    isSubmitted,
+    isSubmitted: _isSubmitted,
     ...props
 }: InputProps) => {
   return (

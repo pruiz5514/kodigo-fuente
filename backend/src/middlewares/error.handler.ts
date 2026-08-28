@@ -6,7 +6,7 @@ export interface AppError extends Error {
   data?: unknown;
 }
 
-const errorHandler: ErrorRequestHandler = (err: AppError, req, res, next) => {
+const errorHandler: ErrorRequestHandler = (err: AppError, req, res, _next) => {
   if (err instanceof ValidationError) {
     return res.status(400).json({ message: err.message });
   }

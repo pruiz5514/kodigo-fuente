@@ -12,6 +12,14 @@ app.use(express.json());
 
 app.use(cors());
 
+app.get('/health', async (req, res) => {
+    try {
+        await sequelize.authenticate();
+        res.status(200).json({ status: 'ok' });
+    } catch (error) {
+        res.status(503).json({ status: 'error', message: (error as Error).message });
+    }
+});
 
 routerApi(app)
 
