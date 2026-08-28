@@ -14,7 +14,7 @@ Necesitas Docker y Docker Compose instalados. Con eso:
    cp .env.example .env
    ```
 
-   Completa los valores de `.env` (usuario, contraseña y nombre de la base de datos, puertos, etc.). No subas este archivo, ya está ignorado por git.
+   Completa los valores de `.env` (usuario, contraseña y nombre de la base de datos, puertos, etc.).
 
 2. Levanta todo el stack:
 
