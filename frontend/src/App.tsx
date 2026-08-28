@@ -44,7 +44,7 @@ function App() {
         <div className="w-full max-w-7xl flex flex-col gap-8">
           <StatsSection/>
           <NewDiscount onCreated={() => setRefreshKey((key) => key + 1)}/>
-          <DiscountsTable discounts={discounts}/>
+          <DiscountsTable discounts={discounts} onChanged={() => setRefreshKey((key) => key + 1)}/>
           {pagination && (
             <Pagination
               pagination={pagination}

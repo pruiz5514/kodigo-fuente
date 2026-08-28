@@ -25,6 +25,14 @@ class DiscountService{
     async createDiscount(data: ICreateDiscount): Promise<ICreateDiscountResponse> {
         return apiClient.post<ICreateDiscountResponse, ICreateDiscount>("discount", data);
     }
+
+    async deleteDiscount(id: number): Promise<void> {
+        return apiClient.delete<void>(`discount/${id}`);
+    }
+
+    async updateDiscountStatus(id: number, status: string): Promise<ICreateDiscountResponse> {
+        return apiClient.patch<ICreateDiscountResponse, { status: string }>(`discount/${id}/status`, { status });
+    }
 }
 
 const discountService = new DiscountService();

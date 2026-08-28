@@ -10,6 +10,8 @@ import Button from '../atoms/Button'
 import discountService from '../../infrastructure/services/discount.service'
 import categoryService from '../../infrastructure/services/category.service'
 import type { Category } from '../../interfaces/categories/get-categories.interface'
+import { successAlert, errorAlertOk } from '../../infrastructure/utils/alerts/alerts'
+import { getApiErrorMessage } from '../../infrastructure/utils/get-api-error-message'
 
 function getBogotaToday(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date())
@@ -139,10 +141,12 @@ const DiscountForm = ({ cancelButton, onCreated }: IDiscountFormProps) => {
           ? { category_id: data.category_id }
           : { product_id: data.product_id }),
       })
+      successAlert('¡Listo!', 'El descuento se creó correctamente')
       onCreated?.()
       cancelButton()
     } catch (error) {
       console.error(error)
+      errorAlertOk('Error', getApiErrorMessage(error))
     }
   }
 

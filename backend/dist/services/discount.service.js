@@ -100,6 +100,25 @@ export default class DiscountService {
             activeToday: activeToday.length,
         };
     }
+    async updateStatus(id, status) {
+        const discount = await Discount.findByPk(id);
+        if (!discount)
+            throw badRequest('La promoción especificada no existe');
+        const currentStatus = discount.get('status');
+        if (currentStatus === 'Finalizado') {
+            throw badRequest('Una promoción en estado "Finalizado" no puede modificarse');
+        }
+        const allowedTransitions = {
+            'Programado': 'Activo',
+            'Activo': 'Finalizado',
+        };
+        if (allowedTransitions[currentStatus] !== status) {
+            throw badRequest(`No se puede cambiar el estado de "${currentStatus}" a "${status}"`);
+        }
+        discount.status = status;
+        await discount.save();
+        return discount;
+    }
     async delete(id) {
         const discount = await Discount.findByPk(id);
         if (!discount)

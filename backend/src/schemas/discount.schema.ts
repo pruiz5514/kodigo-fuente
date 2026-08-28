@@ -25,3 +25,7 @@ export const discountSchema = Joi.object({
         'date.min': '"end_date" no puede ser anterior a "start_date"'
     })
 })
+
+export const updateDiscountStatusSchema = Joi.object({
+    status: Joi.string().valid('Activo', 'Finalizado').required()
+})

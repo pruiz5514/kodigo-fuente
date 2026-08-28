@@ -55,6 +55,17 @@ export default class DiscountController {
     }
   }
 
+  async updateStatus(req: Request, res: Response, next: NextFunction){
+    try{
+      const id = Number(req.params.id);
+      const { status } = req.body;
+      const discount = await service.updateStatus(id, status);
+      return res.status(200).json({ ok: true, discount });
+    }catch (error) {
+        next(error);
+    }
+  }
+
   async delete(req: Request, res: Response, next: NextFunction){
     try{
       const id = Number(req.params.id);
