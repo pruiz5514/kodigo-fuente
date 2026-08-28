@@ -1,6 +1,12 @@
-import type { IDiscounts } from "../../interfaces/discounts/get-discounts.interface";
+import type { Discount, IDiscounts } from "../../interfaces/discounts/get-discounts.interface";
 import type { ISummary } from "../../interfaces/summary.interface";
+import type { ICreateDiscount } from "../../interfaces/discounts/create-discount.dto";
 import { apiClient } from "../utils/api-client";
+
+interface ICreateDiscountResponse {
+    ok:       boolean;
+    discount: Discount;
+}
 
 class DiscountService{
     async getSummary(): Promise<ISummary> {
@@ -14,6 +20,10 @@ class DiscountService{
 
         const queryString = query.toString();
         return apiClient.get<IDiscounts>(`discount${queryString ? `?${queryString}` : ""}`);
+    }
+
+    async createDiscount(data: ICreateDiscount): Promise<ICreateDiscountResponse> {
+        return apiClient.post<ICreateDiscountResponse, ICreateDiscount>("discount", data);
     }
 }
 

@@ -5,6 +5,7 @@ import Pagination from "./components/molecules/Pagination"
 import Header from "./components/organisms/Header"
 import discountService from "./infrastructure/services/discount.service"
 import type { Discount, Pagination as IPagination } from "./interfaces/discounts/get-discounts.interface"
+import NewDiscount from "./components/organisms/NewDiscount"
 
 function App() {
   const [discounts, setDiscounts] = useState<Discount[]>([])
@@ -12,6 +13,7 @@ function App() {
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [isLoading, setIsLoading] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     const fetchDiscounts = async () => {
@@ -28,7 +30,7 @@ function App() {
     }
 
     fetchDiscounts()
-  }, [page, limit])
+  }, [page, limit, refreshKey])
 
   const handleLimitChange = (newLimit: number) => {
     setLimit(newLimit)
@@ -41,6 +43,7 @@ function App() {
       <main className="w-full flex justify-center py-12 px-8">
         <div className="w-full max-w-7xl flex flex-col gap-8">
           <StatsSection/>
+          <NewDiscount onCreated={() => setRefreshKey((key) => key + 1)}/>
           <DiscountsTable discounts={discounts}/>
           {pagination && (
             <Pagination
