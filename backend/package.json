@@ -10,8 +10,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "db:seed": "node -r tsx/cjs ./node_modules/.bin/sequelize-cli db:seed",
-    "db:seed:undo": "node -r tsx/cjs ./node_modules/.bin/sequelize-cli db:seed:undo"
+    "db:seed": "node -r tsx/cjs ./node_modules/.bin/sequelize-cli db:seed:all",
+    "db:seed:undo": "node -r tsx/cjs ./node_modules/.bin/sequelize-cli db:seed:undo:all"
   },
   "author": "pruiz554",
   "license": "ISC",
